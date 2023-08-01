@@ -40,7 +40,7 @@ if __name__ == '__main__':
         # print(angle, dis)
         # print(pitch)
         # print(type(scan))  <class 'tuple'>
-        print(scan.data)
+        print(type(scan.data))
 
         img = robotsensor.get_image()
         cv_image = bridge.imgmsg_to_cv2(img, "passthrough")
