@@ -26,7 +26,6 @@ if __name__ == '__main__':
     start_time = time.time()
     vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
-    
     while not rospy.is_shutdown():
         try:
             (trans,rot) = listener.lookupTransform('/odom', '/base_link', rospy.Time(0))
@@ -34,20 +33,19 @@ if __name__ == '__main__':
             continue
         print('(x, y) = (',round(trans[0],6), ' , ', round(trans[1],6), ')')
 
-        scan = robotsensor.get_laser_full()
+        scan = robotsensor.get_velodyne()
         [roll, pitch, yaw] = robotsensor.get_odom()
-        [angle, dis] = robotsensor.get_min_distance_angle()
+        # [angle, dis] = robotsensor.get_min_distance_angle()
 
-        print(angle, dis)
-        print(pitch)
+        # print(angle, dis)
+        # print(pitch)
         # print(type(scan))  <class 'tuple'>
-        # print(len(scan)) 13088
+        print(scan.data)
 
         img = robotsensor.get_image()
         cv_image = bridge.imgmsg_to_cv2(img, "passthrough")
         cv2.imshow("Image Window", cv_image)
         cv2.waitKey(3)
-
 
         #########---------------------- plan OK ----------------------#########
         # cmd.linear.x = 0.5

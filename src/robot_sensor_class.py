@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -24,11 +25,15 @@ class RobotSensor():
         self.d435_subscriber = rospy.Subscriber(
             '/camera/color/image_raw', Image, self.image_callback)
         
+        self.velodyne_subscriber = rospy.Subscriber(
+            '/velodyne_points', PointCloud2, self.PointCloud2_callback)
+        
         self.odom_sub = rospy.Subscriber ('/odom', Odometry, self.odom_callback)
         self.cmd = Twist()
         self.laser_msg = LaserScan()
-        self.image_msg =  Image()
         self.summit_laser_msg = LaserScan()
+        self.image_msg =  Image()
+        self.pointcloud2_msg =  PointCloud2()
         self.roll = 0.0
         self.pitch = 0.0
         self.yaw = 0.0
@@ -44,6 +49,9 @@ class RobotSensor():
 
     def image_callback(self, msg):
         self.image_msg = msg
+
+    def PointCloud2_callback(self, msg):
+        self.pointcloud2_msg = msg
 
     def summit_laser_callback(self, msg):
         self.summit_laser_msg = msg
@@ -79,6 +87,10 @@ class RobotSensor():
     def get_image(self):
         # time.sleep(1)
         return self.image_msg
+    
+    def get_velodyne(self):
+        # time.sleep(1)
+        return self.pointcloud2_msg
     
     def get_min_distance_angle(self):
         ranges = self.laser_msg.ranges
