@@ -51,6 +51,9 @@ class RobotSensor():
         self.image_msg = msg
 
     def PointCloud2_callback(self, msg):
+        print("Cloud: width = {} height = {}".format(msg.width, msg.height))
+        for pt in msg.points:
+            print("\t({}, {}, {})".format(pt.x, pt.y, pt.z))
         self.pointcloud2_msg = msg
 
     def summit_laser_callback(self, msg):

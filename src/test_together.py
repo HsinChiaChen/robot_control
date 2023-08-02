@@ -40,7 +40,9 @@ if __name__ == '__main__':
         # print(angle, dis)
         # print(pitch)
         # print(type(scan))  <class 'tuple'>
-        print(type(scan.data))
+        # print(type(scan.data))  <class 'bytes'>
+        # print(scan.data.hex())
+        # scan.data.tolist()
 
         img = robotsensor.get_image()
         cv_image = bridge.imgmsg_to_cv2(img, "passthrough")
@@ -59,8 +61,6 @@ if __name__ == '__main__':
         # rate.sleep()
 
         #########---------------------- plan OK in class----------------------#########  
-
-
         cmd = robotmove.move_robot(0.5,0.5)
         vel_publisher.publish(cmd)
         rate.sleep()
