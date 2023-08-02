@@ -19,6 +19,17 @@ robotsensor = RobotSensor()
 cmd=Twist() 
 bridge = CvBridge()
 
+def design_path(t):
+    freq = 2*math.pi/30
+    xRef = 1.1 + 0.7*math.sin(freq*t); yRef = 0.9 + 0.7*math.sin(2*freq*t)
+    dxRef = freq*0.7*math.cos(freq*t); dyRef = 2*freq*0.7*math.cos(2*freq*t)
+    ddxRef =-freq^2*0.7*math.sin(freq*t); ddyRef =-4*freq^2*0.7*math.sin(2*freq*t)
+
+    qRef = (xRef, yRef, math.atan(dyRef, dxRef)) # Reference trajectory
+    vRef = math.sqrt(dxRef^2+dyRef^2)
+    wRef = (dxRef*ddyRef-dyRef*ddxRef)/(dxRef^2+dyRef^2)
+    uRef = (vRef,wRef) # Reference inputs
+
 if __name__ == '__main__':
     rospy.init_node('robot_position')
     listener = tf.TransformListener()
@@ -31,7 +42,17 @@ if __name__ == '__main__':
             (trans,rot) = listener.lookupTransform('/odom', '/base_link', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue
-        print('(x, y) = (',round(trans[0],6), ' , ', round(trans[1],6), ')')
+        print('(x, y, z) = (',round(trans[0],6), ' , ', round(trans[1],6), ' , ', round(trans[2],6) ,')')
+
+        end_time = time.time()
+        runing_time = end_time - start_time
+
+        # (x,y) = design_path(runing_time)
+        # x_error = x - round(trans[0],6)
+        # y_error = y - round(trans[1],6)
+
+        print('time = ', runing_time)
+
 
         scan = robotsensor.get_velodyne()
         [roll, pitch, yaw] = robotsensor.get_odom()
@@ -41,13 +62,16 @@ if __name__ == '__main__':
         # print(pitch)
         # print(type(scan))  <class 'tuple'>
         # print(type(scan.data))  <class 'bytes'>
-        # print(scan.data.hex())
+        # int_scan_data = int(float(scan.data))
+        # print(int_scan_data)
         # scan.data.tolist()
 
         img = robotsensor.get_image()
         cv_image = bridge.imgmsg_to_cv2(img, "passthrough")
         cv2.imshow("Image Window", cv_image)
         cv2.waitKey(3)
+
+        (roll, pitch, yaw) = robotsensor.get_odom()
 
         #########---------------------- plan OK ----------------------#########
         # cmd.linear.x = 0.5
@@ -63,11 +87,7 @@ if __name__ == '__main__':
         #########---------------------- plan OK in class----------------------#########  
         cmd = robotmove.move_robot(0.5,0.5)
         vel_publisher.publish(cmd)
+
         rate.sleep()
 
-        end_time = time.time()
-        runing_time = end_time - start_time
-        print('time = ', runing_time)
-
-
-
+        

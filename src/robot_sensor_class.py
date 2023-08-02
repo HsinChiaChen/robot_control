@@ -43,38 +43,21 @@ class RobotSensor():
     def shutdownhook(self):
         # works better than the rospy.is_shutdown()
         self.ctrl_c = True
-
+    
+    ############################## laser #############################
     def laser_callback(self, msg):
         self.laser_msg = msg
-
-    def image_callback(self, msg):
-        self.image_msg = msg
-
-    def PointCloud2_callback(self, msg):
-        print("Cloud: width = {} height = {}".format(msg.width, msg.height))
-        for pt in msg.points:
-            print("\t({}, {}, {})".format(pt.x, pt.y, pt.z))
-        self.pointcloud2_msg = msg
 
     def summit_laser_callback(self, msg):
         self.summit_laser_msg = msg
 
-    def odom_callback(self, msg):
-        orientation_q = msg.pose.pose.orientation
-        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
-        (self.roll, self.pitch, self.yaw) = euler_from_quaternion (orientation_list)
-
-    def get_odom(self):
-        time.sleep(1)
-        return (self.roll, self.pitch, self.yaw)
-        
     # 使用雷射獲取距離資訊
     def get_laser(self, pos):
         time.sleep(1)
         return self.laser_msg.ranges[pos]
     # 若同時需要獲得多點之距離資訊時，建議使用函式 scan = get_laser_full(self)，其資訊會儲存成一個名為 scan 的 list，
     # 若想得到某角度之資訊可使用 scan[index] 來取得。
-    
+
     def get_laser_summit(self, pos):
         time.sleep(1)
         return self.summit_laser_msg.ranges[pos]
@@ -87,17 +70,48 @@ class RobotSensor():
         # time.sleep(1)
         return self.laser_msg.ranges
     
-    def get_image(self):
-        # time.sleep(1)
-        return self.image_msg
-    
-    def get_velodyne(self):
-        # time.sleep(1)
-        return self.pointcloud2_msg
-    
     def get_min_distance_angle(self):
         ranges = self.laser_msg.ranges
         min_distance = min(ranges)
         total_number = len(ranges)
         min_distance_angle = ranges.index(min_distance)
         return [min_distance_angle, min_distance]
+    
+    def PointCloud2_callback(self, msg):
+        # print("Cloud: width = {} height = {}".format(msg.width, msg.height))
+        # for pt in msg.points:
+        #     print("\t({}, {}, {})".format(pt.x, pt.y, pt.z))
+        self.pointcloud2_msg = msg
+
+    def get_velodyne(self):
+        # time.sleep(1)
+        return self.pointcloud2_msg
+    
+
+    ############################# vision #############################
+    def image_callback(self, msg):
+        self.image_msg = msg
+
+    def get_image(self):
+        # time.sleep(1)
+        return self.image_msg
+
+
+    ############################# odom #############################
+    def odom_callback(self, msg):
+        orientation_q = msg.pose.pose.orientation
+        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+        (self.roll, self.pitch, self.yaw) = euler_from_quaternion (orientation_list)
+
+    def get_odom(self):
+        time.sleep(1)
+        return (self.roll, self.pitch, self.yaw)
+        
+    
+    
+    
+    
+    
+    
+    
+    
