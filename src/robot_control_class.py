@@ -5,7 +5,6 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-import tf
 import time
 import math
 
@@ -13,7 +12,7 @@ import math
 class RobotControl():
 
     def __init__(self):
-        # rospy.init_node('robot_control_node', anonymous=True)
+        rospy.init_node('robot_control_node', anonymous=True)
         self.vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.summit_vel_publisher = rospy.Publisher('/summit_xl_control/cmd_vel', Twist, queue_size=1)
         # self.laser_subscriber = rospy.Subscriber(
@@ -35,7 +34,7 @@ class RobotControl():
         self.pitch = 0.0
         self.yaw = 0.0
         self.ctrl_c = False
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(10)
         rospy.on_shutdown(self.shutdownhook)
 
     def publish_once_in_cmd_vel(self):
@@ -86,7 +85,7 @@ class RobotControl():
         return self.laser_msg.ranges[360]
 
     def get_laser_full(self):
-        # time.sleep(1)
+        time.sleep(1)
         return self.laser_msg.ranges
 
     # 讓正在運行中的 waffle 停下
@@ -95,7 +94,6 @@ class RobotControl():
         self.cmd.linear.x = 0.0
         self.cmd.angular.z = 0.0
         self.publish_once_in_cmd_vel()
-
     # self.cmd.linear.x 代表了 waffle 輪軸的轉速，大於0表示前進；
     # self.cmd.angular.z 則代表 waffle 本身旋轉的角速度，大於0為逆時針轉。
 
@@ -192,80 +190,7 @@ class RobotControl():
 
         self.stop_robot()
 
-    def turn_and_move(self, clockwise, x, z, time):# speed
-        listener = tf.TransformListener()
-
-        # Initilize velocities
-        self.cmd.linear.x = x
-        self.cmd.linear.y = 0
-        self.cmd.linear.z = 0
-        self.cmd.angular.x = 0
-        self.cmd.angular.y = 0
-
-        if clockwise == "clockwise":
-            self.cmd.angular.z = -z
-        else:
-            self.cmd.angular.z = z
-
-        i = 0
-        # loop to publish the velocity estimate, current_distance = velocity * (t1 - t0)
-
-        while (i <= time):
-
-            # (trans,rot) = listener.lookupTransform('/odom', '/base_link', rospy.Time(0))
-
-            # Publish the velocity
-            self.vel_publisher.publish(self.cmd)
-            self.summit_vel_publisher.publish(self.cmd)
-            i += 0.1
-            # print(self.cmd.linear.x)
-
-        # set velocity to zero to stop the robot
-        # self.stop_robot()
-
-        s = "Turned robot " + clockwise + " for " + str(time) + " seconds"
-        # s = "(x, y) = (",round(trans[0],6), " , ", round(trans[1],6), ")"
-        return s
     
-    def turn_and_move2angle(self, x, degrees):# angle
-
-        listener = tf.TransformListener()
-        
-        
-        # Initilize velocities
-        self.cmd.linear.x = x
-        self.cmd.linear.y = 0
-        self.cmd.linear.z = 0
-        self.cmd.angular.x = 0
-        self.cmd.angular.y = 0
-
-        time.sleep(1)
-        target_rad = (degrees * math.pi/180) + self.yaw
-
-        if target_rad < (- math.pi):
-            target_rad = target_rad + (2 * math.pi)
-
-        if target_rad > (math.pi):
-            target_rad = target_rad - (2 * math.pi)
-
-
-        i = 0
-        # loop to publish the velocity estimate, current_distance = velocity * (t1 - t0)
-        while abs(target_rad - self.yaw) > 0.01:
-            self.cmd.angular.z = 0.5 * (target_rad - self.yaw)
-            self.vel_publisher.publish(self.cmd)
-            self.summit_vel_publisher.publish(self.cmd)
-            self.rate.sleep()
-            (trans,rot) = listener.lookupTransform('/odom', '/base_link', rospy.Time(0))
-            # print('(x, y) = (',round(trans[0],6), ' , ', round(trans[1],6), ')')
-            # print(self.cmd.linear.x)
-
-        # set velocity to zero to stop the robot
-        # self.stop_robot()
-        
-        s = self.cmd.angular.z
-        return s
-
     def move_robot(self,linear_velocity,angular_velocity):
          # 設定線速度和角速度
         self.cmd.linear.x = linear_velocity
@@ -276,14 +201,17 @@ class RobotControl():
         self.cmd.angular.y = 0
         self.cmd.angular.z  = angular_velocity # rad/s
 
-
+        # Publish the velocity
+        self.publish_once_in_cmd_vel()
 
 
 if __name__ == '__main__':
-    #rospy.init_node('robot_control_node', anonymous=True)
+    rospy.init_node('robot_control_node', anonymous=True)
     robotcontrol_object = RobotControl()
-    try:
-        robotcontrol_object.move_straight()
 
-    except rospy.ROSInterruptException:
-        pass
+    rate = rospy.Rate(20)
+    while not rospy.is_shutdown():
+        try:
+            robotcontrol_object.move_robot(1,1.5)
+        except rospy.ROSInterruptException:
+            pass

@@ -12,12 +12,31 @@ import math
 
 class RobotMove():
 
+    
     def __init__(self):
         self.cmd = Twist()
         self.roll = 0.0
         self.pitch = 0.0
         self.yaw = 0.0
         self.ctrl_c = False
+
+    def publish_once_in_cmd_vel(self):
+        """
+        This is because publishing in topics sometimes fails the first time you publish.
+        In continuos publishing systems there is no big deal but in systems that publish only
+        once it IS very important.
+        """
+        while not self.ctrl_c:
+            connections = self.vel_publisher.get_num_connections()
+            summit_connections = self.summit_vel_publisher.get_num_connections()
+            if connections > 0 or summit_connections > 0:
+                self.vel_publisher.publish(self.cmd)
+                self.summit_vel_publisher.publish(self.cmd)
+                #rospy.loginfo("Cmd Published")
+                break
+            else:
+                self.rate.sleep()
+
 
     def shutdownhook(self):
         # works better than the rospy.is_shutdown()
@@ -49,10 +68,13 @@ class RobotMove():
 
 
 if __name__ == '__main__':
-    #rospy.init_node('robot_control_node', anonymous=True)
+    # rospy.init_node('robot_move_node', anonymous=True)
     robotcontrol_object = RobotMove()
-    try:
-        robotcontrol_object.move_robot(1,0.5)
 
-    except rospy.ROSInterruptException:
-        pass
+    rate = rospy.Rate(20)
+    while not rospy.is_shutdown():
+        try:
+            robotcontrol_object.move_robot(1,0.5)
+        except rospy.ROSInterruptException:
+            pass
+
