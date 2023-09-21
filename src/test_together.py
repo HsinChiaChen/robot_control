@@ -147,8 +147,8 @@ if __name__ == '__main__':
         (roll, pitch, yaw) = robotsensor.get_odom()
 
         #########---------------------- plan OK in class----------------------#########  
-        # cmd = robotmove.move_robot(0.8,0)
-        # vel_publisher.publish(cmd)
+        cmd = robotmove.move_robot(0.8,0)
+        vel_publisher.publish(cmd)
 
         end_time = time.time()
         runing_time = end_time - start_time
