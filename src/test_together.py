@@ -112,7 +112,7 @@ def goal_point(img):
 
 
 if __name__ == '__main__':
-    rospy.init_node('robot_position')
+    rospy.init_node('robot_move')
     listener = tf.TransformListener()
     rate = rospy.Rate(100)
     start_time = time.time()
